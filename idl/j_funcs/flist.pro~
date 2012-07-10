@@ -1,0 +1,39 @@
+FUNCTION flist, date, ftype=ftype, rawpath=rawpath, $
+                test=test, silent=silent, disk=disk, pfl=pfl
+
+;Makes a list of the images from a given date
+; e.g. 20090812, 20090824
+;and file type
+; sci, flat, dark
+
+;Returns a string array (fnames) with each entry being 
+;the name of a fits file to read in.
+;To get the full path and name, use the /pfl keyword or
+; pfnames =  ms.rawpath+ftype+'/'+fnames
+
+if n_elements(date) eq 0 then date = '20090812'
+if n_elements(ftype) eq 0 then ftype = 'sci'
+
+if n_elements(rawpath) ne 0 then begin
+  flf = rawpath+'ut'+date+'_'+ftype+'.txt'
+  if keyword_set(test) then flf = rawpath+'ut'+date+'_'+ftype+'_test.txt'
+  path = rawpath+ftype+'/'
+endif else begin
+  path = './'
+  flf = path+'ut'+date+'_'+ftype+'.txt'
+endelse
+
+nf = file_lines(flf)
+if not keyword_set(silent) then print, $
+   ftype+': '+strtrim(nf,2)+' frames to read in.'
+
+readcol, flf, fnames, format='(a)', /silent
+
+if keyword_set(pfl) then fnames = path+fnames
+
+return, fnames
+
+end
+
+
+

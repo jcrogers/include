@@ -1,0 +1,56 @@
+function pctunc, phase, p, phime=phime, ipar=ipar
+
+;Returns a 1-D array [n_frames] with the percent of the planet
+;uncovered (unobscured) by the star
+;
+;Required input: phase [n_frames]
+;
+;Requires out of p:
+;  .rp, .rs, .sma -- all units R_Sun
+;  .inc (degrees) -- unless ipar set manually
+if n_elements(p) eq 0 then p = readsinglep('corot1',/silent) ;Default
+;Optional input phime= mid-eclipse phase
+if n_elements(phime) eq 0 then phime = 0.5  ;Default
+;ipar = impact parameter (in units R_sun)
+if n_elements(ipar) eq 0 then ipar = p.sma*cos(!pi/180.*p.inc)  ;Default
+
+;Set up the pct-uncovered array
+nfr = n_elements(phase)
+pctu = fltarr(nfr)
+
+;Calculate the x, y, z coordinates of the planet in units of R_sun
+    x = (p.sma) * sin(2*!pi*(phase-phime))
+    y = ipar * cos(2*!pi*(phase-phime))
+;    z = (p.sma) * sin(!pi/180.*p.inc) * COS(2*!pi*(phase-phime))
+  ;r^2 = x^2 + y^2; z doesn't matter
+    r = SQRT(x^2 + y^2)
+
+;Partially eclipsed points -- Based just off of r, rp, rs
+    pep = where(abs(r-p.rs) lt p.rp)
+if pep[0] ne -1 then begin
+  ;Use r[pep] (array), p.rp, p.rs (scalars)
+  ;Calculate the cosines of angles theta_s and theta_p
+    cths = (r[pep]^2+p.rs^2-p.rp^2)/(2*r[pep]*p.rs)
+    cthp = (r[pep]^2+p.rp^2-p.rs^2)/(2*r[pep]*p.rp)
+  ;Avoid rounding errors
+    badcs = where(abs(cths) ge 1, nbcs)
+    if nbcs gt 0 then cths[badcs]=cths[badcs]/cths[badcs]
+    badcp = where(abs(cthp) ge 1, nbcp)
+    if nbcp gt 0 then cthp[badcp]=cthp[badcp]/cthp[badcp]
+  ;Angles theta_s and theta_p
+    theta_s = acos(cths)
+    theta_p = acos(cthp)
+  ;Area eclipsed (still units of R_SUN)
+    area = (p.rs^2*theta_s + p.rp^2*theta_p - r[pep]*p.rs*sin(theta_s)) 
+  ;Fraction of planet area eclipsed
+    pcta = area / (!pi*p.rp^2)
+  ;Fill in the appropriate fraction of depth
+    pctu[pep] = 1.-pcta
+ endif
+
+;Totally uncovered points
+  oec = where(r ge p.rs + p.rp)
+  if oec[0] ne -1 then pctu[oec]=1.
+
+return, pctu
+end

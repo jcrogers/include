@@ -1,0 +1,11 @@
+function numname, ii
+
+;Turns an input integer ii to an output four-digit string nname
+
+nname = strtrim(ii,2)
+if ii lt 1000 then nname='0'+nname
+if ii lt 100 then nname='0'+nname
+if ii lt 10 then nname='0'+nname
+
+return, nname
+end

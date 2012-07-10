@@ -1,0 +1,12 @@
+function texerr, val, upe, loe
+
+;takes three numbers VALue, UPper Error, LOwer Error and puts them in
+;a nice LaTeX table format
+
+;Must have all three
+;LoE should be a negative value
+
+texout='$'+strtrim(val,2)+'^{+'+strtrim(upe,2)+'}_{'+strtrim(loe,2)+'}$
+
+return, texout
+end
